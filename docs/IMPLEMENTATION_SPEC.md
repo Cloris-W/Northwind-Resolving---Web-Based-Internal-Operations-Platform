@@ -118,7 +118,7 @@ northwind-resolve/
 │   ├── migrations/
 │   ├── seed/
 │   └── schema/
-├── mock-data/                    # 6 challenge CSVs
+├── data/                    # 6 challenge CSVs
 ├── docs/
 │   ├── architecture.md
 │   ├── api-contract.yaml
@@ -179,6 +179,8 @@ northwind-resolve/
 | GET | /api/audit/events/{id}/verify | Verify audit record | Re-hash current payload and compare |
 | GET | /api/dashboard/kpis | Dashboard metrics | Calculated from DB / seed data |
 | GET | /api/value-case | Savings/payback data | Expose assumptions separately from observed data |
+| GET | /api/accounts/{accountId}/billing
+| GET | /api/billing/exceptions/{id}
 
 **Standard error response:**
 
@@ -448,7 +450,7 @@ Health Check
 - Legacy retirement roadmap after integration data proves which systems drive cost/risk.
 # Appendix A. Codex Kick-off Checklist
 
-[ ] Repository created with frontend/backend/docs/mock-data structure
+[ ] Repository created with frontend/backend/docs/data structure
 
 [ ] Angular app runs
 
@@ -462,7 +464,7 @@ Health Check
 
 [ ] DB migrations created
 
-[ ] 6 synthetic CSV files placed under mock-data/
+[ ] 6 synthetic CSV files placed under data/
 
 [ ] Seed/import command documented
 
