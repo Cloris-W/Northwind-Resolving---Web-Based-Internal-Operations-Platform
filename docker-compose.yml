@@ -1,0 +1,15 @@
+services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-northwind_resolve}
+      POSTGRES_USER: ${POSTGRES_USER:-northwind}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-for-local-development}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+

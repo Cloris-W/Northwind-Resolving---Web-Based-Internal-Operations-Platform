@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+main {
+  max-width: 48rem;
+  margin: 5rem auto;
+  padding: 0 1.5rem;
+}
