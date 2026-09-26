@@ -16,6 +16,8 @@ class CaseEntity(
     var caseId: String = "",
     @Column(name = "account_id", nullable = false, length = 64)
     var accountId: String = "",
+    @Column(name = "source_system_id", length = 64)
+    var sourceSystemId: String? = null,
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     var category: CaseCategory = CaseCategory.OTHER,

@@ -8,9 +8,11 @@ backend/.gradle/
 backend/build/
 backend/.kotlin/
 backend/out/
+backend/bin/
 
 # Local environment and tooling
 .env
+.env.local
 *.log
 .idea/
 .vscode/

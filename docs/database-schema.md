@@ -13,4 +13,23 @@ Resolve stores a canonical operational context. It does not replace legacy syste
 - `ai_analysis` stores traceable future advisory output metadata.
 - `audit_events` stores hashes and future chain-submission state; no customer PII or complaint content is stored on-chain.
 
-The initial migration has no seed data and creates exactly these eight operational tables.
+The initial migration creates exactly the eight operational tables above. Migration V2 adds read-only imported-source tables: `legacy_systems`, `legacy_complaints`, `monthly_kpis`, `meter_region_monthly_metrics`, `ai_pilot_monthly_metrics`, and `unit_costs`. These preserve the supplied CSV facts without treating aggregate source data as account-level records.
+
+`legacy_complaints.complaint_id` is projected directly into `cases.case_id`; both are `VARCHAR(64)`. The raw complaint status, category, priority, and source-system identifier remain preserved in `legacy_complaints`, while the case row carries the canonical normalized values and `source_system_id`.
+
+## Deterministic complaint normalization
+
+| CSV field | Raw value | Canonical value |
+| --- | --- | --- |
+| `priority` | `P1` | `CRITICAL` |
+| `priority` | `P2` | `HIGH` |
+| `priority` | `P3` | `MEDIUM` |
+| `category` | `Billing - disputed amount`, `Billing - estimated read`, `Payment - plan or arrears` | `BILLING` |
+| `category` | `Metering - no read taken` | `METERING` |
+| `category` | `Service - missed appointment`, `Service - poor communication`, `Supply - interruption`, `Water - pressure or quality` | `SERVICE` |
+| `category` | `Other` | `OTHER` |
+| `status` | `Open` | `OPEN` |
+| `status` | `Closed` | `CLOSED` |
+| `status` | `Closed - reopened` | `IN_PROGRESS` |
+
+Any unlisted raw value fails the import rather than being inferred. Each source file is parsed and header-validated before its own transaction begins; natural-key upserts make repeat imports stable. Complaint-created events use a deterministic UUID, so one complaint yields one `COMPLAINT_CREATED` event.

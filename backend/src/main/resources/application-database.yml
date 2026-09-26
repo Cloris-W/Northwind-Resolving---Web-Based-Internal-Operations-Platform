@@ -12,3 +12,7 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+
+northwind:
+  import:
+    data-directory: ${NORTHWIND_IMPORT_DATA_DIRECTORY:../data}

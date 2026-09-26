@@ -92,6 +92,9 @@ Important failure cases:
 - Do not add frameworks, infrastructure, or dependencies without a clear need.
 - Keep changes scoped to the requested phase/task.
 - Run tests after code changes.
+- After every phase, run `scripts/verify-phase.ps1`.
+- A phase is not complete if any existing regression test fails or is skipped.
+- Phase-specific tests must pass before the full regression gate.
 
 ## Definition of Done
 A feature is complete only when:
