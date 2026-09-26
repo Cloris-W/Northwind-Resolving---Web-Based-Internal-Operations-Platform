@@ -1,6 +1,6 @@
 # Northwind Resolve
 
-Northwind Resolve is an internal operations platform built as an Angular frontend and a Kotlin/Spring Boot modular monolith. Phase 2 imports the six supplied synthetic CSV files into PostgreSQL after a database-profile startup and exposes their data through internal mock legacy adapters. It does not implement business workflows, frontend features, Gemini, Solana, Tiger Data, or deployment integration.
+Northwind Resolve is an internal operations platform built as an Angular frontend and a Kotlin/Spring Boot modular monolith. Phase 3 provides a Case Workspace for canonical case search, case context, timeline, and truthful available account context from the Phase 2 imported data.
 
 ## Prerequisites
 
@@ -70,6 +70,6 @@ Run the mandatory full phase gate after completing a phase. It starts Docker ser
 - `database/migrations/` — canonical versioned PostgreSQL migrations, including imported-source tables.
 - `docs/` — architecture, contract, schema, testing, and deployment documentation.
 
-## Current limitations
+## Case Workspace limitations
 
-The frontend is a static placeholder. There are no API controllers or business workflows yet. The supplied meter data is regional/monthly aggregate data, not account-level meter history; billing data is limited to complaint indicators; the AI pilot data is aggregate; and no FieldForce visits are fabricated. Gemini, Solana, and other later-phase capabilities remain deferred.
+The Case Workspace does not fabricate missing source facts. The supplied meter data is regional/monthly aggregate data, so account meter histories are empty. Detailed invoices and canonical bill corrections are not supplied, so billing histories may be empty. FieldForce visits remain empty until a later workflow creates them. Transfer, field-visit creation/results, billing risk/review, Gemini, Solana, dashboard, and value-case workflows remain deferred.

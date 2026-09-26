@@ -6,7 +6,9 @@ import com.northwind.resolve.cases.domain.CasePriority
 import com.northwind.resolve.cases.domain.CaseStatus
 import com.northwind.resolve.cases.domain.SourceSystem
 import com.northwind.resolve.common.api.PageMetadata
+import com.northwind.resolve.billing.api.BillingExceptionDto
 import com.northwind.resolve.fieldforce.api.FieldVisitDto
+import com.northwind.resolve.metering.api.MeterReadingDto
 import java.time.Instant
 import java.util.UUID
 
@@ -16,4 +18,9 @@ data class CaseListResponse(val items: List<CaseDto>, val page: PageMetadata)
 data class CaseTimelineResponse(val caseId: String, val events: List<CaseEventDto>)
 data class TransferCaseRequest(val assignedTeam: String, val reason: String? = null)
 data class TransferCaseResponse(val case: CaseDto, val event: CaseEventDto)
-data class CaseContextResponse(val case: CaseDto, val fieldVisits: List<FieldVisitDto>)
+data class CaseContextResponse(
+    val case: CaseDto,
+    val latestBillingException: BillingExceptionDto?,
+    val latestMeterReading: MeterReadingDto?,
+    val fieldVisits: List<FieldVisitDto>,
+)

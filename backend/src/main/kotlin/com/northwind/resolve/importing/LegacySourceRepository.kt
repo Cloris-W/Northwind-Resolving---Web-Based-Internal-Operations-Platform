@@ -109,9 +109,9 @@ class LegacySourceRepository(private val jdbc: NamedParameterJdbcTemplate) : Leg
     ) { rs, _ -> BillingCorrectionIndicator(rs.getString(1), rs.getString(2), rs.getBigDecimal(3)) }
 
     override fun findFieldVisits(caseId: String): List<PersistedFieldVisitReference> = jdbc.query(
-        "SELECT id AS visit_id, case_id FROM field_visits WHERE case_id = :caseId ORDER BY id",
+        "SELECT id AS visit_id, case_id, status, scheduled_at, completed_at, outcome FROM field_visits WHERE case_id = :caseId ORDER BY scheduled_at ASC, id ASC",
         mapOf("caseId" to caseId),
-    ) { rs, _ -> PersistedFieldVisitReference(rs.getObject(1, UUID::class.java).toString(), rs.getString(2)) }
+    ) { rs, _ -> PersistedFieldVisitReference(rs.getObject(1, UUID::class.java), rs.getString(2), rs.getString(3), rs.getObject(4, java.time.OffsetDateTime::class.java).toInstant(), rs.getObject(5, java.time.OffsetDateTime::class.java)?.toInstant(), rs.getString(6)) }
 
     private fun update(sql: String, params: Map<String, Any?>) = jdbc.update(sql, MapSqlParameterSource(params))
 

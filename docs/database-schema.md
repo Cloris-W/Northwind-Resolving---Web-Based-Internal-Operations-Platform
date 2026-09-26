@@ -33,3 +33,13 @@ The initial migration creates exactly the eight operational tables above. Migrat
 | `status` | `Closed - reopened` | `IN_PROGRESS` |
 
 Any unlisted raw value fails the import rather than being inferred. Each source file is parsed and header-validated before its own transaction begins; natural-key upserts make repeat imports stable. Complaint-created events use a deterministic UUID, so one complaint yields one `COMPLAINT_CREATED` event.
+
+## Phase 3 Case Workspace read limits
+
+The Case Workspace reads canonical `cases` and `case_events`. It may also read canonical `meter_readings`, `bill_corrections`, `billing_exceptions`, and persisted `field_visits` when records exist. Phase 2 does not populate those account-level operational tables from aggregate or incomplete CSV data:
+
+- `meter_region_monthly_metrics` is regional/monthly aggregate data and is never returned as account meter readings.
+- `bill_correction_value` in `legacy_complaints` is not a canonical invoice or correction record.
+- `field_visits` remains empty until the later FieldForce workflow persists a visit.
+
+Consequently, valid account endpoints return truthful empty arrays where the supplied source does not provide contract-compatible records.

@@ -2,6 +2,8 @@ package com.northwind.resolve.importing
 
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.Instant
+import java.util.UUID
 
 data class ImportedCaseReference(
     val caseId: String,
@@ -26,7 +28,7 @@ data class BillingCorrectionIndicator(
     val billCorrectionValue: BigDecimal?,
 )
 
-data class PersistedFieldVisitReference(val visitId: String, val caseId: String)
+data class PersistedFieldVisitReference(val visitId: UUID, val caseId: String, val status: String, val scheduledAt: Instant, val completedAt: Instant?, val outcome: String?)
 
 interface LegacySourceQuery {
     fun findCase(caseId: String): ImportedCaseReference?
