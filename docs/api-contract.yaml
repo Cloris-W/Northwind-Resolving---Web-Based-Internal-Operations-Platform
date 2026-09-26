@@ -1,0 +1,831 @@
+openapi: 3.0.3
+info:
+  title: Northwind Resolve API
+  version: 1.0.0
+  description: |
+    Contract-first API for the Northwind Resolve internal operations platform.
+    This document defines the MVP wire contract only. It does not imply that
+    persistence, legacy adapters, Gemini, or Solana integrations are available.
+servers:
+  - url: http://localhost:8080
+    description: Local development
+tags:
+  - name: Cases
+  - name: Accounts
+  - name: Billing
+  - name: AI Assistance
+  - name: Audit
+  - name: Analytics
+paths:
+  /api/cases:
+    get:
+      tags: [Cases]
+      operationId: listCases
+      summary: Search canonical cases
+      parameters:
+        - $ref: '#/components/parameters/CaseStatusFilter'
+        - $ref: '#/components/parameters/CaseCategoryFilter'
+        - $ref: '#/components/parameters/RegionFilter'
+        - $ref: '#/components/parameters/AccountIdFilter'
+        - $ref: '#/components/parameters/SlaBreachedFilter'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Matching canonical cases
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseListResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+  /api/cases/{caseId}:
+    get:
+      tags: [Cases]
+      operationId: getCaseContext
+      summary: Get unified canonical case context
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Unified case context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseContextResponse'
+        '404':
+          $ref: '#/components/responses/CaseNotFound'
+  /api/cases/{caseId}/timeline:
+    get:
+      tags: [Cases]
+      operationId: getCaseTimeline
+      summary: Get an append-only case timeline
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Chronological case events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseTimelineResponse'
+        '404':
+          $ref: '#/components/responses/CaseNotFound'
+  /api/cases/{caseId}/transfer:
+    post:
+      tags: [Cases]
+      operationId: transferCase
+      summary: Transfer a case while retaining its case ID and history
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferCaseRequest'
+      responses:
+        '200':
+          description: Case transfer accepted and represented in the timeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferCaseResponse'
+        '400':
+          $ref: '#/components/responses/InvalidCaseTransfer'
+        '404':
+          $ref: '#/components/responses/CaseNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+  /api/cases/{caseId}/field-visit:
+    post:
+      tags: [Cases]
+      operationId: requestFieldVisit
+      summary: Request field work with minimum necessary context
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldVisitRequest'
+      responses:
+        '201':
+          description: Field visit request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldVisit'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/CaseNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+  /api/accounts/{accountId}/meter-readings:
+    get:
+      tags: [Accounts]
+      operationId: getMeterReadings
+      summary: Get time-ordered account meter readings
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+      responses:
+        '200':
+          description: Meter reading history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeterReadingsResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/AccountNotFound'
+  /api/accounts/{accountId}/billing:
+    get:
+      tags: [Accounts]
+      operationId: getAccountBillingHistory
+      summary: Get canonical billing history for an account
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+      responses:
+        '200':
+          description: Billing history and correction references
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountBillingHistoryResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/AccountNotFound'
+  /api/billing/exceptions:
+    get:
+      tags: [Billing]
+      operationId: listBillingExceptions
+      summary: List billing quality exceptions
+      parameters:
+        - $ref: '#/components/parameters/RiskLevelFilter'
+        - $ref: '#/components/parameters/BillingExceptionStatusFilter'
+        - $ref: '#/components/parameters/RegionFilter'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Billing exception queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingExceptionListResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+  /api/billing/exceptions/{id}:
+    get:
+      tags: [Billing]
+      operationId: getBillingException
+      summary: Get a billing exception and review context
+      parameters:
+        - $ref: '#/components/parameters/BillingExceptionId'
+      responses:
+        '200':
+          description: Billing exception detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingException'
+        '404':
+          $ref: '#/components/responses/BillingExceptionNotFound'
+  /api/billing/exceptions/{id}/review:
+    post:
+      tags: [Billing]
+      operationId: reviewBillingException
+      summary: Review a billing exception and optionally record a bill correction
+      parameters:
+        - $ref: '#/components/parameters/BillingExceptionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingExceptionReviewRequest'
+      responses:
+        '200':
+          description: Review result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingExceptionReviewResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/BillingExceptionNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+  /api/ai/cases/{caseId}/summary:
+    post:
+      tags: [AI Assistance]
+      operationId: generateCaseSummary
+      summary: Generate an advisory structured case summary
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Structured advisory case summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiCaseSummary'
+        '404':
+          $ref: '#/components/responses/CaseNotFound'
+        '503':
+          $ref: '#/components/responses/AiUnavailable'
+  /api/ai/cases/{caseId}/recommendation:
+    post:
+      tags: [AI Assistance]
+      operationId: generateCaseRecommendation
+      summary: Generate an advisory structured recommendation
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Advisory recommendation; no consequential action is executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiCaseRecommendation'
+        '404':
+          $ref: '#/components/responses/CaseNotFound'
+        '503':
+          $ref: '#/components/responses/AiUnavailable'
+  /api/audit/events:
+    post:
+      tags: [Audit]
+      operationId: createAuditEvent
+      summary: Create a non-sensitive audit hash record
+      description: Raw PII, complaint text, and bill details are prohibited from this request.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuditEventRequest'
+      responses:
+        '202':
+          description: Audit hash accepted; chain submission may remain pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEvent'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/CaseNotFound'
+  /api/audit/events/{id}/verify:
+    get:
+      tags: [Audit]
+      operationId: verifyAuditEvent
+      summary: Verify an audit hash against the canonical payload
+      parameters:
+        - $ref: '#/components/parameters/AuditEventId'
+      responses:
+        '200':
+          description: Audit verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditVerificationResponse'
+        '404':
+          $ref: '#/components/responses/AuditEventNotFound'
+  /api/dashboard/kpis:
+    get:
+      tags: [Analytics]
+      operationId: getDashboardKpis
+      summary: Get executive dashboard KPIs
+      parameters:
+        - $ref: '#/components/parameters/RegionFilter'
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+      responses:
+        '200':
+          description: Operational KPI snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardKpisResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+  /api/value-case:
+    get:
+      tags: [Analytics]
+      operationId: getValueCase
+      summary: Get value-case assumptions and calculated benefit metrics
+      responses:
+        '200':
+          description: Value-case calculation inputs and outputs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValueCaseResponse'
+components:
+  parameters:
+    CaseId:
+      name: caseId
+      in: path
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    BillingExceptionId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AuditEventId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    CaseStatusFilter:
+      name: status
+      in: query
+      schema: { $ref: '#/components/schemas/CaseStatus' }
+    CaseCategoryFilter:
+      name: category
+      in: query
+      schema: { $ref: '#/components/schemas/CaseCategory' }
+    RegionFilter:
+      name: region
+      in: query
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    AccountIdFilter:
+      name: accountId
+      in: query
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    SlaBreachedFilter:
+      name: slaBreached
+      in: query
+      schema: { type: boolean }
+    RiskLevelFilter:
+      name: riskLevel
+      in: query
+      schema: { $ref: '#/components/schemas/RiskLevel' }
+    BillingExceptionStatusFilter:
+      name: status
+      in: query
+      schema: { $ref: '#/components/schemas/BillingExceptionStatus' }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+    PageSize:
+      name: size
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    From:
+      name: from
+      in: query
+      schema: { type: string, format: date-time }
+    To:
+      name: to
+      in: query
+      schema: { type: string, format: date-time }
+  responses:
+    InvalidRequest:
+      description: Request validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+    InvalidCaseTransfer:
+      description: The transfer request is invalid
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+          example:
+            timestamp: '2026-09-26T14:00:00Z'
+            status: 400
+            code: INVALID_CASE_TRANSFER
+            message: Assigned team is required
+            traceId: 7d1eb6ee-aa4e-4aac-9b2e-a7316a7867b1
+    CaseNotFound:
+      description: Case does not exist
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    AccountNotFound:
+      description: Account does not exist
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    BillingExceptionNotFound:
+      description: Billing exception does not exist
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    AuditEventNotFound:
+      description: Audit event does not exist
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    StateConflict:
+      description: Request conflicts with the current resource state or a prior idempotent request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    AiUnavailable:
+      description: AI assistance is temporarily unavailable; core workflows remain available
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+  schemas:
+    ApiError:
+      type: object
+      required: [timestamp, status, code, message, traceId]
+      properties:
+        timestamp: { type: string, format: date-time }
+        status: { type: integer, minimum: 100, maximum: 599 }
+        code: { type: string, minLength: 1, maxLength: 100 }
+        message: { type: string, minLength: 1, maxLength: 500 }
+        traceId: { type: string, minLength: 1, maxLength: 128 }
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          required: [violations]
+          properties:
+            violations:
+              type: array
+              minItems: 1
+              items: { $ref: '#/components/schemas/FieldViolation' }
+    FieldViolation:
+      type: object
+      required: [field, message]
+      properties:
+        field: { type: string, minLength: 1, maxLength: 128 }
+        message: { type: string, minLength: 1, maxLength: 500 }
+    PageMetadata:
+      type: object
+      required: [page, size, totalElements, totalPages]
+      properties:
+        page: { type: integer, minimum: 0 }
+        size: { type: integer, minimum: 1 }
+        totalElements: { type: integer, minimum: 0, format: int64 }
+        totalPages: { type: integer, minimum: 0 }
+    CaseStatus:
+      type: string
+      enum: [OPEN, IN_PROGRESS, PENDING_FIELD_VISIT, RESOLVED, CLOSED]
+    CaseCategory:
+      type: string
+      enum: [BILLING, METERING, SERVICE, COMPLAINT, OTHER]
+    CasePriority:
+      type: string
+      enum: [LOW, MEDIUM, HIGH, CRITICAL]
+    CaseEventType:
+      type: string
+      enum: [COMPLAINT_CREATED, TRANSFERRED, BILL_CHECKED, METER_REVIEWED, FIELD_VISIT_REQUESTED, FIELD_VISIT_COMPLETED, BILL_CORRECTED, CASE_CLOSED]
+    SourceSystem:
+      type: string
+      enum: [RESOLVE, CASETRACK, METERHUB, BILLING, FIELDFORCE, CALLCENTRE]
+    FieldVisitStatus:
+      type: string
+      enum: [REQUESTED, SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED]
+    BillingExceptionStatus:
+      type: string
+      enum: [OPEN, IN_REVIEW, RESOLVED, DISMISSED]
+    RiskLevel:
+      type: string
+      enum: [LOW, MEDIUM, HIGH]
+    BillingReviewAction:
+      type: string
+      enum: [VERIFY_READING, REQUEST_FIELD_VISIT, CORRECT_BILL, APPROVE]
+    AuditEventType:
+      type: string
+      enum: [BILL_CORRECTED, CASE_CLOSED, METER_OVERRIDE, COMPENSATION_APPROVED]
+    AuditStatus:
+      type: string
+      enum: [PENDING, SUBMITTED, VERIFIED, FAILED]
+    AuditVerificationStatus:
+      type: string
+      enum: [VERIFIED, MISMATCH, PENDING]
+    Case:
+      type: object
+      required: [caseId, accountId, category, priority, region, status, slaDays, openedAt, assignedTeam]
+      properties:
+        caseId: { type: string, minLength: 1, maxLength: 64 }
+        accountId: { type: string, minLength: 1, maxLength: 64 }
+        category: { $ref: '#/components/schemas/CaseCategory' }
+        priority: { $ref: '#/components/schemas/CasePriority' }
+        region: { type: string, minLength: 1, maxLength: 64 }
+        status: { $ref: '#/components/schemas/CaseStatus' }
+        slaDays: { type: integer, minimum: 0, maximum: 365 }
+        openedAt: { type: string, format: date-time }
+        closedAt: { type: string, format: date-time, nullable: true }
+        assignedTeam: { type: string, minLength: 1, maxLength: 100 }
+    CaseListResponse:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Case' }
+        page: { $ref: '#/components/schemas/PageMetadata' }
+    CaseContextResponse:
+      type: object
+      required: [case, fieldVisits]
+      properties:
+        case: { $ref: '#/components/schemas/Case' }
+        latestBillingException: { $ref: '#/components/schemas/BillingException', nullable: true }
+        latestMeterReading: { $ref: '#/components/schemas/MeterReading', nullable: true }
+        fieldVisits:
+          type: array
+          items: { $ref: '#/components/schemas/FieldVisit' }
+    CaseEvent:
+      type: object
+      required: [eventId, caseId, eventType, sourceSystem, timestamp, actor, description]
+      properties:
+        eventId: { type: string, format: uuid }
+        caseId: { type: string, minLength: 1, maxLength: 64 }
+        eventType: { $ref: '#/components/schemas/CaseEventType' }
+        sourceSystem: { $ref: '#/components/schemas/SourceSystem' }
+        timestamp: { type: string, format: date-time }
+        actor: { type: string, minLength: 1, maxLength: 128 }
+        description: { type: string, minLength: 1, maxLength: 1000 }
+        metadata: { type: object, additionalProperties: true }
+    CaseTimelineResponse:
+      type: object
+      required: [caseId, events]
+      properties:
+        caseId: { type: string, minLength: 1, maxLength: 64 }
+        events:
+          type: array
+          items: { $ref: '#/components/schemas/CaseEvent' }
+    TransferCaseRequest:
+      type: object
+      required: [assignedTeam]
+      properties:
+        assignedTeam: { type: string, minLength: 1, maxLength: 100 }
+        reason: { type: string, maxLength: 500 }
+    TransferCaseResponse:
+      type: object
+      required: [case, event]
+      properties:
+        case: { $ref: '#/components/schemas/Case' }
+        event: { $ref: '#/components/schemas/CaseEvent' }
+    FieldVisitRequest:
+      type: object
+      required: [requestedFor, visitReason]
+      properties:
+        requestedFor: { type: string, format: date-time }
+        visitReason: { type: string, minLength: 1, maxLength: 500 }
+        meterId: { type: string, maxLength: 64 }
+        instructions: { type: string, maxLength: 500 }
+      description: Contains only operational details required for field work.
+    FieldVisit:
+      type: object
+      required: [id, caseId, status, scheduledAt]
+      properties:
+        id: { type: string, format: uuid }
+        caseId: { type: string, minLength: 1, maxLength: 64 }
+        status: { $ref: '#/components/schemas/FieldVisitStatus' }
+        scheduledAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time, nullable: true }
+        outcome: { type: string, maxLength: 1000, nullable: true }
+    MeterReading:
+      type: object
+      required: [accountId, meterId, timestamp, value, estimated, region]
+      properties:
+        accountId: { type: string, minLength: 1, maxLength: 64 }
+        meterId: { type: string, minLength: 1, maxLength: 64 }
+        timestamp: { type: string, format: date-time }
+        value: { type: number, format: double, minimum: 0 }
+        estimated: { type: boolean }
+        region: { type: string, minLength: 1, maxLength: 64 }
+    MeterReadingsResponse:
+      type: object
+      required: [accountId, readings]
+      properties:
+        accountId: { type: string, minLength: 1, maxLength: 64 }
+        readings:
+          type: array
+          items: { $ref: '#/components/schemas/MeterReading' }
+    BillingRecord:
+      type: object
+      required: [billingId, accountId, periodStart, periodEnd, amount, status]
+      properties:
+        billingId: { type: string, minLength: 1, maxLength: 64 }
+        accountId: { type: string, minLength: 1, maxLength: 64 }
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        amount: { type: number, format: double }
+        status: { type: string, enum: [ISSUED, CORRECTED, VOIDED] }
+    BillCorrection:
+      type: object
+      required: [id, accountId, originalValue, correctedValue, reason, region, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        accountId: { type: string, minLength: 1, maxLength: 64 }
+        originalValue: { type: number, format: double }
+        correctedValue: { type: number, format: double }
+        reason: { type: string, minLength: 1, maxLength: 500 }
+        region: { type: string, minLength: 1, maxLength: 64 }
+        createdAt: { type: string, format: date-time }
+    AccountBillingHistoryResponse:
+      type: object
+      required: [accountId, bills, corrections]
+      properties:
+        accountId: { type: string, minLength: 1, maxLength: 64 }
+        bills:
+          type: array
+          items: { $ref: '#/components/schemas/BillingRecord' }
+        corrections:
+          type: array
+          items: { $ref: '#/components/schemas/BillCorrection' }
+    BillingException:
+      type: object
+      required: [id, accountId, riskScore, riskLevel, reasonCodes, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        accountId: { type: string, minLength: 1, maxLength: 64 }
+        caseId: { type: string, maxLength: 64, nullable: true }
+        riskScore: { type: integer, minimum: 0, maximum: 100 }
+        riskLevel: { $ref: '#/components/schemas/RiskLevel' }
+        reasonCodes:
+          type: array
+          minItems: 1
+          items: { type: string, minLength: 1, maxLength: 100 }
+        status: { $ref: '#/components/schemas/BillingExceptionStatus' }
+        region: { type: string, minLength: 1, maxLength: 64 }
+        createdAt: { type: string, format: date-time }
+        reviewedBy: { type: string, maxLength: 128, nullable: true }
+    BillingExceptionListResponse:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/BillingException' }
+        page: { $ref: '#/components/schemas/PageMetadata' }
+    BillingExceptionReviewRequest:
+      oneOf:
+        - $ref: '#/components/schemas/VerifyReadingReviewRequest'
+        - $ref: '#/components/schemas/RequestFieldVisitReviewRequest'
+        - $ref: '#/components/schemas/CorrectBillReviewRequest'
+        - $ref: '#/components/schemas/ApproveReviewRequest'
+      discriminator:
+        propertyName: action
+        mapping:
+          VERIFY_READING: '#/components/schemas/VerifyReadingReviewRequest'
+          REQUEST_FIELD_VISIT: '#/components/schemas/RequestFieldVisitReviewRequest'
+          CORRECT_BILL: '#/components/schemas/CorrectBillReviewRequest'
+          APPROVE: '#/components/schemas/ApproveReviewRequest'
+    ReviewRequestBase:
+      type: object
+      required: [action, reviewedBy]
+      properties:
+        action: { $ref: '#/components/schemas/BillingReviewAction' }
+        reviewedBy: { type: string, minLength: 1, maxLength: 128 }
+        notes: { type: string, maxLength: 1000 }
+    VerifyReadingReviewRequest:
+      allOf:
+        - $ref: '#/components/schemas/ReviewRequestBase'
+        - type: object
+          properties:
+            action: { type: string, enum: [VERIFY_READING] }
+    RequestFieldVisitReviewRequest:
+      allOf:
+        - $ref: '#/components/schemas/ReviewRequestBase'
+        - type: object
+          properties:
+            action: { type: string, enum: [REQUEST_FIELD_VISIT] }
+    CorrectBillReviewRequest:
+      allOf:
+        - $ref: '#/components/schemas/ReviewRequestBase'
+        - type: object
+          required: [correction]
+          properties:
+            action: { type: string, enum: [CORRECT_BILL] }
+            correction:
+              type: object
+              required: [originalValue, correctedValue, reason, region]
+              properties:
+                originalValue: { type: number, format: double }
+                correctedValue: { type: number, format: double }
+                reason: { type: string, minLength: 1, maxLength: 500 }
+                region: { type: string, minLength: 1, maxLength: 64 }
+    ApproveReviewRequest:
+      allOf:
+        - $ref: '#/components/schemas/ReviewRequestBase'
+        - type: object
+          properties:
+            action: { type: string, enum: [APPROVE] }
+    BillingExceptionReviewResponse:
+      type: object
+      required: [exception, action, reviewedAt]
+      properties:
+        exception: { $ref: '#/components/schemas/BillingException' }
+        action: { $ref: '#/components/schemas/BillingReviewAction' }
+        correction: { $ref: '#/components/schemas/BillCorrection', nullable: true }
+        fieldVisit: { $ref: '#/components/schemas/FieldVisit', nullable: true }
+        reviewedAt: { type: string, format: date-time }
+    AiCaseSummary:
+      type: object
+      required: [caseId, summary, classification, generatedAt]
+      properties:
+        caseId: { type: string, minLength: 1, maxLength: 64 }
+        summary: { type: string, minLength: 1, maxLength: 4000 }
+        classification: { type: string, minLength: 1, maxLength: 100 }
+        generatedAt: { type: string, format: date-time }
+        model: { type: string, maxLength: 128 }
+    AiCaseRecommendation:
+      type: object
+      required: [caseId, recommendation, rationale, generatedAt, advisory]
+      properties:
+        caseId: { type: string, minLength: 1, maxLength: 64 }
+        recommendation: { type: string, minLength: 1, maxLength: 2000 }
+        rationale: { type: string, minLength: 1, maxLength: 4000 }
+        generatedAt: { type: string, format: date-time }
+        advisory: { type: boolean, enum: [true] }
+        model: { type: string, maxLength: 128 }
+    CreateAuditEventRequest:
+      type: object
+      required: [caseId, eventType, eventReference]
+      properties:
+        caseId: { type: string, minLength: 1, maxLength: 64 }
+        eventType: { $ref: '#/components/schemas/AuditEventType' }
+        eventReference: { type: string, minLength: 1, maxLength: 128 }
+      additionalProperties: false
+    AuditEvent:
+      type: object
+      required: [id, caseId, eventType, payloadHash, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        caseId: { type: string, minLength: 1, maxLength: 64 }
+        eventType: { $ref: '#/components/schemas/AuditEventType' }
+        payloadHash: { type: string, pattern: '^[A-Fa-f0-9]{64}$' }
+        solanaSignature: { type: string, nullable: true, maxLength: 128 }
+        status: { $ref: '#/components/schemas/AuditStatus' }
+        createdAt: { type: string, format: date-time }
+    AuditVerificationResponse:
+      type: object
+      required: [auditEventId, verificationStatus, checkedAt]
+      properties:
+        auditEventId: { type: string, format: uuid }
+        verificationStatus: { $ref: '#/components/schemas/AuditVerificationStatus' }
+        checkedAt: { type: string, format: date-time }
+        expectedHash: { type: string, pattern: '^[A-Fa-f0-9]{64}$' }
+        actualHash: { type: string, pattern: '^[A-Fa-f0-9]{64}$', nullable: true }
+    DashboardKpisResponse:
+      type: object
+      required: [generatedAt, metrics]
+      properties:
+        generatedAt: { type: string, format: date-time }
+        metrics:
+          type: object
+          required: [backlog, slaCompliancePercent, firstContactResolutionPercent, transferRatePercent, reopenRatePercent, billingExceptionCount, estimatedReadRatePercent]
+          properties:
+            backlog: { type: integer, minimum: 0 }
+            slaCompliancePercent: { type: number, minimum: 0, maximum: 100 }
+            firstContactResolutionPercent: { type: number, minimum: 0, maximum: 100 }
+            transferRatePercent: { type: number, minimum: 0, maximum: 100 }
+            reopenRatePercent: { type: number, minimum: 0, maximum: 100 }
+            billingExceptionCount: { type: integer, minimum: 0 }
+            estimatedReadRatePercent: { type: number, minimum: 0, maximum: 100 }
+    ValueCaseResponse:
+      type: object
+      required: [assumptions, observedMetrics, grossBenefit, annualOperatingCost, annualNetBenefit, paybackMonths]
+      properties:
+        assumptions:
+          type: object
+          required: [inboundCallCost, standardComplaintCost, transferredComplaintCost, manualCorrectionCost, fieldVisitCost, contactCentreFteAnnualCost, buildCost]
+          properties:
+            inboundCallCost: { type: number, format: double, example: 7.4 }
+            standardComplaintCost: { type: number, format: double, example: 68 }
+            transferredComplaintCost: { type: number, format: double, example: 121 }
+            manualCorrectionCost: { type: number, format: double, example: 34 }
+            fieldVisitCost: { type: number, format: double, example: 92 }
+            contactCentreFteAnnualCost: { type: number, format: double, example: 46000 }
+            buildCost: { type: number, format: double, description: Explicit assumption until supplied by source data }
+        observedMetrics:
+          type: object
+          additionalProperties: { type: number, format: double }
+          description: Observed source metrics; distinct from assumptions.
+        grossBenefit: { type: number, format: double }
+        annualOperatingCost: { type: number, format: double }
+        annualNetBenefit: { type: number, format: double, description: Gross benefit minus annual operating cost }
+        paybackMonths: { type: number, format: double, minimum: 0 }
