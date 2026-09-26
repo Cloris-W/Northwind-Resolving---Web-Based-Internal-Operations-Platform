@@ -31,10 +31,15 @@ Northwind Resolve is an internal operations platform built as an Angular fronten
 
    ```powershell
    Set-Location backend
+   # Export POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, and POSTGRES_PORT
+   # with the same values used by docker compose before enabling the database profile.
+   $env:SPRING_PROFILES_ACTIVE = 'database'
    .\gradlew.bat bootRun
    ```
 
    Confirm health at `http://localhost:8080/actuator/health`.
+
+   View the canonical API contract in Swagger UI at `http://localhost:8080/swagger-ui/index.html`.
 
 4. Optionally start local PostgreSQL (not yet connected to the application):
 
@@ -59,8 +64,9 @@ Set-Location ../backend
 - `frontend/` — Angular + TypeScript user interface.
 - `backend/` — Kotlin + Spring Boot modular monolith.
 - `data/` — six original synthetic challenge CSV inputs; not imported in Phase 0.
+- `database/migrations/` — canonical versioned PostgreSQL migrations; no seed data is included.
 - `docs/` — architecture, contract, schema, testing, and deployment documentation.
 
 ## Phase 0 limitations
 
-The backend exposes only Spring Boot Actuator health/info endpoints. The frontend is a static placeholder. Phase 1 will define the OpenAPI contract, error schema, migrations, and core DTOs/entities.
+The frontend is a static placeholder. API controllers, repositories, business workflows, CSV import, Gemini, Solana, and legacy adapters remain deferred to later phases.

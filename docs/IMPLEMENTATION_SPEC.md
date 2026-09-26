@@ -169,7 +169,9 @@ northwind-resolve/
 | POST | /api/cases/{caseId}/transfer | Transfer case | Same case ID + TRANSFERRED event |
 | POST | /api/cases/{caseId}/field-visit | Request field work | Only minimum necessary context |
 | GET | /api/accounts/{accountId}/meter-readings | Meter history | Time-ordered data |
+| GET | /api/accounts/{accountId}/billing | Account billing history | Canonical billing history and correction references |
 | GET | /api/billing/exceptions | Exception queue | Filter by risk/status/region |
+| GET | /api/billing/exceptions/{id} | Billing exception detail | Return review context for one exception |
 | POST | /api/billing/exceptions/{id}/review | Review exception | Validated action + audit/event |
 | POST | /api/ai/cases/{caseId}/summary | Gemini summary | Structured response + graceful failure |
 | POST | /api/ai/cases/{caseId}/recommendation | Gemini recommendation | No consequential auto-action |

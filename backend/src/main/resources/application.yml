@@ -1,6 +1,15 @@
 spring:
   application:
     name: northwind-resolve
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+
+springdoc:
+  swagger-ui:
+    url: /api-contract.yaml
 
 management:
   endpoints:
