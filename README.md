@@ -4,7 +4,7 @@ Northwind Resolve is an internal operations platform built as an Angular fronten
 
 ## Prerequisites
 
-- Node.js 20.19+ or 22.12+
+- Node.js 20.19+, 22.12+, or 24+
 - npm 10+
 - Java 21
 - Docker Desktop (optional, for the local PostgreSQL container)
@@ -46,6 +46,7 @@ Northwind Resolve is an internal operations platform built as an Angular fronten
 
 ```powershell
 Set-Location frontend
+npm test
 npm run build
 
 Set-Location ../backend
@@ -57,8 +58,7 @@ Set-Location ../backend
 
 - `frontend/` — Angular + TypeScript user interface.
 - `backend/` — Kotlin + Spring Boot modular monolith.
-- `database/` — future versioned migrations, seeds, and schema documentation.
-- `mock-data/` — six provided synthetic challenge CSV inputs; not imported in Phase 0.
+- `data/` — six original synthetic challenge CSV inputs; not imported in Phase 0.
 - `docs/` — architecture, contract, schema, testing, and deployment documentation.
 
 ## Phase 0 limitations
