@@ -5,9 +5,14 @@ import com.northwind.resolve.importing.ImportedCaseReference
 import com.northwind.resolve.importing.LegacySourceQuery
 import com.northwind.resolve.importing.MeterRegionMetric
 import com.northwind.resolve.importing.PersistedFieldVisitReference
+import com.northwind.resolve.fieldforce.domain.FieldVisitEntity
+import com.northwind.resolve.fieldforce.domain.FieldVisitStatus
+import com.northwind.resolve.fieldforce.persistence.FieldVisitRepository
 import org.springframework.stereotype.Component
 import org.springframework.context.annotation.Profile
 import java.time.LocalDate
+import java.time.Instant
+import java.util.UUID
 
 interface CaseTrackProvider {
     fun findCase(caseId: String): ImportedCaseReference?
@@ -27,7 +32,10 @@ interface BillingProvider {
 interface FieldForceProvider {
     /** Returns only visits actually persisted by a later workflow. Phase 2 creates none. */
     fun findPersistedVisits(caseId: String): List<PersistedFieldVisitReference>
+    fun requestVisit(context: FieldForceRequestContext, visitId: UUID): PersistedFieldVisitReference
 }
+
+data class FieldForceRequestContext(val caseId: String, val region: String, val requestedFor: Instant, val visitReason: String, val meterId: String?, val instructions: String?)
 
 @Component
 @Profile("database")
@@ -50,6 +58,11 @@ class BillingMockAdapter(private val source: LegacySourceQuery) : BillingProvide
 
 @Component
 @Profile("database")
-class FieldForceMockAdapter(private val source: LegacySourceQuery) : FieldForceProvider {
+class FieldForceMockAdapter(private val source: LegacySourceQuery, private val visits: FieldVisitRepository? = null) : FieldForceProvider {
     override fun findPersistedVisits(caseId: String) = source.findFieldVisits(caseId)
+    override fun requestVisit(context: FieldForceRequestContext, visitId: UUID): PersistedFieldVisitReference {
+        val created = requireNotNull(visits) { "FieldForce visit persistence is not configured" }
+            .create(FieldVisitEntity(visitId, context.caseId, FieldVisitStatus.REQUESTED, context.requestedFor))
+        return PersistedFieldVisitReference(created.id, created.caseId, created.status.name, created.scheduledAt, created.completedAt, created.outcome)
+    }
 }

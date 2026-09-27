@@ -16,12 +16,14 @@ import com.northwind.resolve.billing.domain.BillingReviewAction
 import com.northwind.resolve.billing.domain.RiskLevel
 import com.northwind.resolve.cases.api.CaseDto
 import com.northwind.resolve.cases.api.CaseEventDto
+import com.northwind.resolve.cases.api.TransferCaseRequest
 import com.northwind.resolve.cases.domain.CaseCategory
 import com.northwind.resolve.cases.domain.CaseEventType
 import com.northwind.resolve.cases.domain.CasePriority
 import com.northwind.resolve.cases.domain.CaseStatus
 import com.northwind.resolve.cases.domain.SourceSystem
 import com.northwind.resolve.fieldforce.api.FieldVisitDto
+import com.northwind.resolve.fieldforce.api.FieldVisitRequest
 import com.northwind.resolve.fieldforce.domain.FieldVisitStatus
 import com.northwind.resolve.metering.api.MeterReadingDto
 import io.swagger.v3.parser.OpenAPIV3Parser
@@ -41,10 +43,12 @@ class DtoSchemaContractTests {
         val dtoMappings = mapOf<KClass<*>, String>(
             CaseDto::class to "Case",
             CaseEventDto::class to "CaseEvent",
+            TransferCaseRequest::class to "TransferCaseRequest",
             MeterReadingDto::class to "MeterReading",
             BillCorrectionDto::class to "BillCorrection",
             BillingExceptionDto::class to "BillingException",
             FieldVisitDto::class to "FieldVisit",
+            FieldVisitRequest::class to "FieldVisitRequest",
             AiCaseSummaryDto::class to "AiCaseSummary",
             AiCaseRecommendationDto::class to "AiCaseRecommendation",
             CreateAuditEventRequest::class to "CreateAuditEventRequest",

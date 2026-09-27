@@ -1,6 +1,6 @@
 # Northwind Resolve
 
-Northwind Resolve is an internal operations platform built as an Angular frontend and a Kotlin/Spring Boot modular monolith. Phase 3 provides a Case Workspace for canonical case search, case context, timeline, and truthful available account context from the Phase 2 imported data.
+Northwind Resolve is an internal operations platform built as an Angular frontend and a Kotlin/Spring Boot modular monolith. Phase 4 adds idempotent case transfer and FieldForce visit requests to the Case Workspace while retaining the same Case ID and append-only timeline.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ Northwind Resolve is an internal operations platform built as an Angular fronten
 
 ## Start locally
 
-1. Create local environment settings. `.env.local` is ignored by Git and persists settings across shells:
+1. Optionally create local environment settings. `.env.local` is ignored by Git and persists settings across shells. It is useful when the local PostgreSQL port differs from `5432` (for example `5433`):
 
    ```powershell
    Copy-Item .env.example .env.local
@@ -72,4 +72,4 @@ Run the mandatory full phase gate after completing a phase. It starts Docker ser
 
 ## Case Workspace limitations
 
-The Case Workspace does not fabricate missing source facts. The supplied meter data is regional/monthly aggregate data, so account meter histories are empty. Detailed invoices and canonical bill corrections are not supplied, so billing histories may be empty. FieldForce visits remain empty until a later workflow creates them. Transfer, field-visit creation/results, billing risk/review, Gemini, Solana, dashboard, and value-case workflows remain deferred.
+The Case Workspace does not fabricate missing source facts. The supplied meter data is regional/monthly aggregate data, so account meter histories are empty. Detailed invoices and canonical bill corrections are not supplied, so billing histories may be empty. FieldForce visits begin only when a user requests one through the approved API. The approved contract does not yet include a FieldForce result-writeback endpoint, so visit completion/results remain deferred. Billing risk/review, Gemini, Solana, dashboard, and value-case workflows remain deferred.

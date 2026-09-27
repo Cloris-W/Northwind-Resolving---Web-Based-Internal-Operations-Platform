@@ -5,3 +5,6 @@ export interface FieldVisit { id: string; caseId: string; status: string; schedu
 export interface CaseListResponse { items: CaseDto[]; page: { page: number; size: number; totalElements: number; totalPages: number }; }
 export interface MeterReadingsResponse { accountId: string; readings: unknown[]; }
 export interface BillingHistoryResponse { accountId: string; bills: unknown[]; corrections: unknown[]; }
+export interface TransferCaseRequest { assignedTeam: string; reason?: string; }
+export interface TransferCaseResponse { case: CaseDto; event: CaseEvent; }
+export interface FieldVisitRequest { requestedFor: string; visitReason: string; meterId?: string; instructions?: string; }

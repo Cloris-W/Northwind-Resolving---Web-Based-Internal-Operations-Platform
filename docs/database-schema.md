@@ -43,3 +43,9 @@ The Case Workspace reads canonical `cases` and `case_events`. It may also read c
 - `field_visits` remains empty until the later FieldForce workflow persists a visit.
 
 Consequently, valid account endpoints return truthful empty arrays where the supplied source does not provide contract-compatible records.
+
+## Phase 4 mutation integrity
+
+Migration V3 adds `mutation_idempotency`, which durably records the response and request fingerprint for the contract-required idempotency key on case transfers and field-visit requests. A transaction-scoped advisory lock serializes each operation/key pair. Replaying the same request returns the stored result; reusing a key with different input is rejected as a state conflict.
+
+Case transfer updates only `cases.assigned_team` and appends a `TRANSFERRED` event in the same transaction. A FieldForce request is sent through the mock provider with only case ID, region, schedule, reason, and optional meter/instructions; it persists one `field_visits` row and appends one `FIELD_VISIT_REQUESTED` event atomically. The approved API contract has no result-writeback operation, so no completion workflow or `FIELD_VISIT_COMPLETED` event is exposed yet.

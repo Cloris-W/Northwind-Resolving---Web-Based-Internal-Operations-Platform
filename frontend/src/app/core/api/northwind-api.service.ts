@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { BillingHistoryResponse, CaseContext, CaseListResponse, CaseEvent, MeterReadingsResponse } from './northwind-api.models';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { BillingHistoryResponse, CaseContext, CaseListResponse, CaseEvent, FieldVisit, FieldVisitRequest, MeterReadingsResponse, TransferCaseRequest, TransferCaseResponse } from './northwind-api.models';
 
 @Injectable({ providedIn: 'root' })
 export class NorthwindApiService {
@@ -10,4 +10,7 @@ export class NorthwindApiService {
   timeline(caseId: string) { return this.http.get<{ caseId: string; events: CaseEvent[] }>(`/api/cases/${encodeURIComponent(caseId)}/timeline`); }
   meterReadings(accountId: string) { return this.http.get<MeterReadingsResponse>(`/api/accounts/${encodeURIComponent(accountId)}/meter-readings`); }
   billingHistory(accountId: string) { return this.http.get<BillingHistoryResponse>(`/api/accounts/${encodeURIComponent(accountId)}/billing`); }
+  transferCase(caseId: string, request: TransferCaseRequest, idempotencyKey: string) { return this.http.post<TransferCaseResponse>(`/api/cases/${encodeURIComponent(caseId)}/transfer`, request, { headers: this.idempotencyHeader(idempotencyKey) }); }
+  requestFieldVisit(caseId: string, request: FieldVisitRequest, idempotencyKey: string) { return this.http.post<FieldVisit>(`/api/cases/${encodeURIComponent(caseId)}/field-visit`, request, { headers: this.idempotencyHeader(idempotencyKey) }); }
+  private idempotencyHeader(idempotencyKey: string) { return new HttpHeaders().set('Idempotency-Key', idempotencyKey); }
 }

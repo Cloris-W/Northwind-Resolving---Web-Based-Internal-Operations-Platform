@@ -3,6 +3,8 @@ package com.northwind.resolve.common.api
 import com.northwind.resolve.cases.application.AccountNotFoundException
 import com.northwind.resolve.cases.application.CaseNotFoundException
 import com.northwind.resolve.cases.application.InvalidRequestException
+import com.northwind.resolve.cases.application.InvalidCaseTransferException
+import com.northwind.resolve.cases.application.MutationConflictException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
@@ -23,6 +25,12 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(InvalidRequestException::class, IllegalArgumentException::class)
     fun invalidRequest(error: RuntimeException, request: HttpServletRequest) = error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", error.message ?: "Invalid request", request)
+
+    @ExceptionHandler(InvalidCaseTransferException::class)
+    fun invalidTransfer(error: InvalidCaseTransferException, request: HttpServletRequest) = error(HttpStatus.BAD_REQUEST, "INVALID_CASE_TRANSFER", error.message ?: "Invalid case transfer", request)
+
+    @ExceptionHandler(MutationConflictException::class)
+    fun mutationConflict(error: MutationConflictException, request: HttpServletRequest) = error(HttpStatus.CONFLICT, "STATE_CONFLICT", error.message ?: "Mutation conflict", request)
 
     private fun error(status: HttpStatus, code: String, message: String, request: HttpServletRequest): ResponseEntity<ApiErrorResponse> =
         ResponseEntity.status(status).body(ApiErrorResponse(Instant.now(), status.value(), code, message, request.getHeader("X-Trace-Id") ?: UUID.randomUUID().toString()))

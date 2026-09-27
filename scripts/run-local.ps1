@@ -9,9 +9,7 @@ function Get-RepositoryRoot {
 
 function Import-LocalEnvironment([string]$RepositoryRoot) {
     $environmentFile = Join-Path $RepositoryRoot '.env.local'
-    if (-not (Test-Path -LiteralPath $environmentFile -PathType Leaf)) {
-        throw "Missing $environmentFile. Copy .env.example to .env.local and set local PostgreSQL values before running this script."
-    }
+    if (-not (Test-Path -LiteralPath $environmentFile -PathType Leaf)) { return }
 
     foreach ($line in Get-Content -LiteralPath $environmentFile) {
         $trimmed = $line.Trim()
@@ -23,15 +21,12 @@ function Import-LocalEnvironment([string]$RepositoryRoot) {
         Set-Item -Path "Env:$name" -Value $value
     }
 
-    foreach ($required in 'POSTGRES_HOST', 'POSTGRES_PORT', 'POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD') {
-        if ([string]::IsNullOrWhiteSpace((Get-Item -Path "Env:$required" -ErrorAction SilentlyContinue).Value)) {
-            throw "Required environment variable $required is missing or empty in .env.local."
-        }
-    }
 }
 
 $repositoryRoot = Get-RepositoryRoot
 Import-LocalEnvironment $repositoryRoot
+$defaults = @{ POSTGRES_HOST = 'localhost'; POSTGRES_PORT = '5432'; POSTGRES_DB = 'northwind_resolve'; POSTGRES_USER = 'northwind'; POSTGRES_PASSWORD = 'change-me-for-local-development' }
+foreach ($name in $defaults.Keys) { if ([string]::IsNullOrWhiteSpace((Get-Item -Path "Env:$name" -ErrorAction SilentlyContinue).Value)) { Set-Item -Path "Env:$name" -Value $defaults[$name] } }
 
 Push-Location $repositoryRoot
 try {

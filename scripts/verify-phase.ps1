@@ -12,9 +12,7 @@ function Get-RepositoryRoot {
 
 function Import-LocalEnvironment([string]$RepositoryRoot) {
     $environmentFile = Join-Path $RepositoryRoot '.env.local'
-    if (-not (Test-Path -LiteralPath $environmentFile -PathType Leaf)) {
-        throw "Missing $environmentFile. Copy .env.example to .env.local and set local PostgreSQL values before running the phase gate."
-    }
+    if (-not (Test-Path -LiteralPath $environmentFile -PathType Leaf)) { return }
 
     foreach ($line in Get-Content -LiteralPath $environmentFile) {
         $trimmed = $line.Trim()
@@ -24,11 +22,6 @@ function Import-LocalEnvironment([string]$RepositoryRoot) {
         Set-Item -Path "Env:$($trimmed.Substring(0, $separator).Trim())" -Value $trimmed.Substring($separator + 1)
     }
 
-    foreach ($required in 'POSTGRES_HOST', 'POSTGRES_PORT', 'POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD') {
-        if ([string]::IsNullOrWhiteSpace((Get-Item -Path "Env:$required" -ErrorAction SilentlyContinue).Value)) {
-            throw "Required environment variable $required is missing or empty in .env.local."
-        }
-    }
 }
 
 function Invoke-Checked([string]$Description, [scriptblock]$Action) {
@@ -82,6 +75,8 @@ $frontendDirectory = Join-Path $repositoryRoot 'frontend'
 
 try {
     Import-LocalEnvironment $repositoryRoot
+    $defaults = @{ POSTGRES_HOST = 'localhost'; POSTGRES_PORT = '5432'; POSTGRES_DB = 'northwind_resolve'; POSTGRES_USER = 'northwind'; POSTGRES_PASSWORD = 'change-me-for-local-development' }
+    foreach ($name in $defaults.Keys) { if ([string]::IsNullOrWhiteSpace((Get-Item -Path "Env:$name" -ErrorAction SilentlyContinue).Value)) { Set-Item -Path "Env:$name" -Value $defaults[$name] } }
 
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Docker CLI is not installed or is not on PATH.' }
     & docker info *> $null
