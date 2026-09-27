@@ -747,11 +747,12 @@ components:
         reviewedAt: { type: string, format: date-time }
     AiCaseSummary:
       type: object
-      required: [caseId, summary, classification, generatedAt]
+      required: [caseId, summary, classification, customerResponseDraft, generatedAt]
       properties:
         caseId: { type: string, minLength: 1, maxLength: 64 }
         summary: { type: string, minLength: 1, maxLength: 4000 }
         classification: { type: string, minLength: 1, maxLength: 100 }
+        customerResponseDraft: { type: string, minLength: 1, maxLength: 4000 }
         generatedAt: { type: string, format: date-time }
         model: { type: string, maxLength: 128 }
     AiCaseRecommendation:

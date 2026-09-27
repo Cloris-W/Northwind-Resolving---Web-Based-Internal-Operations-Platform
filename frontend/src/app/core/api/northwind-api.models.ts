@@ -11,3 +11,5 @@ export interface FieldVisitRequest { requestedFor: string; visitReason: string; 
 export interface BillingException { id:string; accountId:string; caseId:string|null; riskScore:number; riskLevel:string; reasonCodes:string[]; status:string; region:string; createdAt:string; reviewedBy:string|null; }
 export interface BillingExceptionPage { items: BillingException[]; page:{page:number;size:number;totalElements:number;totalPages:number}; }
 export type BillingReviewRequest = { action:'VERIFY_READING'|'APPROVE'; reviewedBy:string; notes?:string } | { action:'REQUEST_FIELD_VISIT'; reviewedBy:string; fieldVisitRequest:FieldVisitRequest; notes?:string } | { action:'CORRECT_BILL'; reviewedBy:string; correction:{originalValue:number;correctedValue:number;reason:string;region:string}; notes?:string };
+export interface AiCaseSummary { caseId:string; summary:string; classification:string; customerResponseDraft:string; generatedAt:string; model?:string; }
+export interface AiCaseRecommendation { caseId:string; recommendation:string; rationale:string; generatedAt:string; advisory:true; model?:string; }

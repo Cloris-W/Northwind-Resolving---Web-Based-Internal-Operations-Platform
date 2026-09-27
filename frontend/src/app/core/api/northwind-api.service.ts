@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { BillingHistoryResponse, BillingException, BillingExceptionPage, BillingReviewRequest, CaseContext, CaseListResponse, CaseEvent, FieldVisit, FieldVisitRequest, MeterReadingsResponse, TransferCaseRequest, TransferCaseResponse } from './northwind-api.models';
+import { AiCaseRecommendation, AiCaseSummary, BillingHistoryResponse, BillingException, BillingExceptionPage, BillingReviewRequest, CaseContext, CaseListResponse, CaseEvent, FieldVisit, FieldVisitRequest, MeterReadingsResponse, TransferCaseRequest, TransferCaseResponse } from './northwind-api.models';
 
 @Injectable({ providedIn: 'root' })
 export class NorthwindApiService {
@@ -16,4 +16,6 @@ export class NorthwindApiService {
   billingExceptions(params: Record<string,string>) { return this.http.get<BillingExceptionPage>('/api/billing/exceptions',{params:new HttpParams({fromObject:params})}); }
   billingException(id:string) { return this.http.get<BillingException>(`/api/billing/exceptions/${encodeURIComponent(id)}`); }
   reviewBillingException(id:string,request:BillingReviewRequest,key:string) { return this.http.post(`/api/billing/exceptions/${encodeURIComponent(id)}/review`,request,{headers:this.idempotencyHeader(key)}); }
+  aiSummary(caseId: string) { return this.http.post<AiCaseSummary>(`/api/ai/cases/${encodeURIComponent(caseId)}/summary`, null); }
+  aiRecommendation(caseId: string) { return this.http.post<AiCaseRecommendation>(`/api/ai/cases/${encodeURIComponent(caseId)}/recommendation`, null); }
 }

@@ -48,7 +48,7 @@ function Get-BackendTestSummary([string]$BackendDirectory) {
 }
 
 function Wait-ForEndpoint([string]$Url) {
-    $deadline = [DateTime]::UtcNow.AddSeconds(90)
+    $deadline = [DateTime]::UtcNow.AddSeconds(360)
     do {
         try {
             $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 3

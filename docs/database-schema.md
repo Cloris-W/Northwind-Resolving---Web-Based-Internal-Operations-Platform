@@ -10,7 +10,7 @@ Resolve stores a canonical operational context. It does not replace legacy syste
 - `meter_readings` stores a time-ordered operational copy for future risk features.
 - `billing_exceptions` and `bill_corrections` hold billing-quality workflow state and feedback.
 - `field_visits` holds the minimum operational field-work record.
-- `ai_analysis` stores traceable future advisory output metadata.
+- `ai_analysis` stores validated, traceable advisory summary or recommendation output metadata.
 - `audit_events` stores hashes and future chain-submission state; no customer PII or complaint content is stored on-chain.
 
 The initial migration creates exactly the eight operational tables above. Migration V2 adds read-only imported-source tables: `legacy_systems`, `legacy_complaints`, `monthly_kpis`, `meter_region_monthly_metrics`, `ai_pilot_monthly_metrics`, and `unit_costs`. These preserve the supplied CSV facts without treating aggregate source data as account-level records.

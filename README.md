@@ -72,4 +72,8 @@ Run the mandatory full phase gate after completing a phase. It starts Docker ser
 
 ## Case Workspace limitations
 
-The Case Workspace does not fabricate missing source facts. The supplied meter data is regional/monthly aggregate data, so account meter histories are empty. Detailed invoices are not supplied. Billing Quality reviews may create canonical correction feedback, but source-data risk evaluation does not infer account meter facts from complaint categories or regional aggregates. FieldForce visits begin only when a user requests one through the approved API. The approved contract does not yet include a FieldForce result-writeback endpoint, so visit completion/results remain deferred. Gemini, Solana, dashboard, and value-case workflows remain deferred.
+The Case Workspace does not fabricate missing source facts. The supplied meter data is regional/monthly aggregate data, so account meter histories are empty. Detailed invoices are not supplied. Billing Quality reviews may create canonical correction feedback, but source-data risk evaluation does not infer account meter facts from complaint categories or regional aggregates. FieldForce visits begin only when a user requests one through the approved API. The approved contract does not yet include a FieldForce result-writeback endpoint, so visit completion/results remain deferred.
+
+## Gemini assistance
+
+Gemini summary and recommendation requests are advisory-only and run through the backend. Configure an optional `GEMINI_API_KEY` in a local ignored `.env.local`; without it, the application starts normally and AI requests return a temporary-unavailable response. AI output is structured and validated before it is displayed or persisted. It cannot perform transfers, request field visits, alter billing, or send customer communication.

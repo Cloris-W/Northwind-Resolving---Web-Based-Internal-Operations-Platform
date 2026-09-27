@@ -13,6 +13,11 @@ import java.util.UUID
 @Repository
 @Profile("database")
 class BillingHistoryReadRepository(private val jdbc: NamedParameterJdbcTemplate) {
+    fun correctionCount(accountId: String): Long = jdbc.queryForObject(
+        "SELECT COUNT(*) FROM bill_corrections WHERE account_id = :accountId",
+        mapOf("accountId" to accountId), Long::class.java,
+    ) ?: 0L
+
     fun findCorrections(accountId: String, from: Instant?, to: Instant?): List<BillCorrectionEntity> {
         val conditions = mutableListOf("account_id = :accountId")
         val parameters = mutableMapOf<String, Any?>("accountId" to accountId)
