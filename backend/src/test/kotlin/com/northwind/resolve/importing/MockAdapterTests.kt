@@ -17,6 +17,7 @@ class MockAdapterTests {
         override fun findMeterMetrics(region: String, month: LocalDate) = listOf(MeterRegionMetric(month, region, 10, BigDecimal("0.1"), BigDecimal("0.2"), 1, "MeterHub"))
         override fun findBillingIndicators(accountId: String) = listOf(BillingCorrectionIndicator("NW-100001", accountId, BigDecimal("12.50")))
         override fun findFieldVisits(caseId: String) = emptyList<PersistedFieldVisitReference>()
+        override fun findBillingRiskFacts() = emptyList<ImportedBillingRiskFact>()
     }
 
     @Test

@@ -1,0 +1,20 @@
+import { provideZonelessChangeDetection } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { BillingExceptionDetailComponent } from './billing-exception-detail.component';
+import { NorthwindApiService } from '../../core/api/northwind-api.service';
+
+describe('BillingExceptionDetailComponent', () => {
+  let fixture: ComponentFixture<BillingExceptionDetailComponent>; let notFound = false; let pending = false; let reviewFail = false; const reviews: unknown[] = [];
+  const record = { id: 'test-exception-id', accountId: 'test-account', caseId: null, riskScore: 60, riskLevel: 'HIGH', reasonCodes: ['TEST'], status: 'OPEN', region: 'Test Region', createdAt: '2026-01-01T00:00:00Z', reviewedBy: null };
+  const api = { billingException: () => pending ? { subscribe: () => ({}) } as never : notFound ? throwError(() => new Error('missing')) : of(record), reviewBillingException: (_id: string, request: unknown) => { reviews.push(request); return reviewFail ? throwError(() => new Error('failed')) : of({}); } };
+  beforeEach(async () => { notFound = false; pending = false; reviewFail = false; reviews.length = 0; await TestBed.configureTestingModule({ imports: [BillingExceptionDetailComponent], providers: [provideZonelessChangeDetection(), provideRouter([]), { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map([['id', 'test-exception-id']]) } } }, { provide: NorthwindApiService, useValue: api }] }).compileComponents(); fixture = TestBed.createComponent(BillingExceptionDetailComponent); });
+  it('renders successful exception detail', () => { fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain('Billing exception'); expect(fixture.nativeElement.textContent).toContain('HIGH 60'); });
+  it('shows a loading state while the detail request is pending', () => { pending = true; fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain('Loading…'); });
+  it('shows a not-found state', () => { notFound = true; fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain('Billing exception not found.'); });
+  it('submits VERIFY_READING and refreshes detail', () => { fixture.detectChanges(); fixture.componentInstance.reviewedBy = 'test-reviewer'; fixture.componentInstance.review(); expect(reviews.at(-1)).toEqual({ action: 'VERIFY_READING', reviewedBy: 'test-reviewer' }); expect(fixture.componentInstance.message()).toBe('Review saved.'); });
+  it('validates nested field-visit request input before submitting', () => { fixture.detectChanges(); fixture.componentInstance.action = 'REQUEST_FIELD_VISIT'; fixture.componentInstance.reviewedBy = 'test-reviewer'; fixture.componentInstance.review(); expect(reviews).toHaveLength(0); fixture.componentInstance.requestedFor = '2026-01-02T10:00'; fixture.componentInstance.visitReason = 'Test visit'; fixture.componentInstance.review(); expect(reviews.at(-1)).toMatchObject({ action: 'REQUEST_FIELD_VISIT', fieldVisitRequest: { visitReason: 'Test visit' } }); });
+  it('validates and submits correction input', () => { fixture.detectChanges(); fixture.componentInstance.action = 'CORRECT_BILL'; fixture.componentInstance.reviewedBy = 'test-reviewer'; fixture.componentInstance.review(); expect(reviews).toHaveLength(0); fixture.componentInstance.reason = 'Test correction'; fixture.componentInstance.correctionRegion = 'Test Region'; fixture.componentInstance.review(); expect(reviews.at(-1)).toMatchObject({ action: 'CORRECT_BILL', correction: { reason: 'Test correction' } }); });
+  it('submits APPROVE and shows server errors', () => { fixture.detectChanges(); fixture.componentInstance.action = 'APPROVE'; fixture.componentInstance.reviewedBy = 'test-reviewer'; fixture.componentInstance.review(); expect(reviews.at(-1)).toEqual({ action: 'APPROVE', reviewedBy: 'test-reviewer' }); reviewFail = true; fixture.componentInstance.review(); expect(fixture.componentInstance.message()).toContain('could not be saved'); });
+});

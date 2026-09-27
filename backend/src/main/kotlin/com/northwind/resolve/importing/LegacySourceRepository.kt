@@ -113,6 +113,13 @@ class LegacySourceRepository(private val jdbc: NamedParameterJdbcTemplate) : Leg
         mapOf("caseId" to caseId),
     ) { rs, _ -> PersistedFieldVisitReference(rs.getObject(1, UUID::class.java), rs.getString(2), rs.getString(3), rs.getObject(4, java.time.OffsetDateTime::class.java).toInstant(), rs.getObject(5, java.time.OffsetDateTime::class.java)?.toInstant(), rs.getString(6)) }
 
+    override fun findBillingRiskFacts(): List<ImportedBillingRiskFact> = jdbc.query(
+        """SELECT c.case_id, c.account_id, c.region, lc.date_opened,
+           EXISTS (SELECT 1 FROM legacy_complaints prior WHERE prior.account_id=lc.account_id AND prior.date_opened < lc.date_opened AND prior.bill_correction_value IS NOT NULL) AS earlier_correction,
+           EXISTS (SELECT 1 FROM legacy_complaints prior WHERE prior.account_id=lc.account_id AND prior.date_opened < lc.date_opened AND prior.raw_category IN ('Billing - disputed amount','Billing - estimated read','Payment - plan or arrears')) AS earlier_billing
+           FROM cases c JOIN legacy_complaints lc ON lc.complaint_id=c.case_id""", emptyMap<String, Any?>(),
+    ) { rs, _ -> ImportedBillingRiskFact(rs.getString(1),rs.getString(2),rs.getString(3),rs.getObject(4, LocalDate::class.java).atStartOfDay(ZoneOffset.UTC).toInstant(),rs.getBoolean(5),rs.getBoolean(6)) }
+
     private fun update(sql: String, params: Map<String, Any?>) = jdbc.update(sql, MapSqlParameterSource(params))
 
     private fun updateCase(sql: String, params: Map<String, Any?>) = jdbc.update(

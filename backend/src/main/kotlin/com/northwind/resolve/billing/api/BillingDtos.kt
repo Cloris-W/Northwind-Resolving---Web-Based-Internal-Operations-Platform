@@ -5,6 +5,9 @@ import com.northwind.resolve.billing.domain.BillingReviewAction
 import com.northwind.resolve.billing.domain.RiskLevel
 import com.northwind.resolve.common.api.PageMetadata
 import com.northwind.resolve.fieldforce.api.FieldVisitDto
+import com.northwind.resolve.fieldforce.api.FieldVisitRequest
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -17,9 +20,16 @@ data class AccountBillingHistoryResponse(val accountId: String, val bills: List<
 data class BillingExceptionDto(val id: UUID, val accountId: String, val caseId: String?, val riskScore: Int, val riskLevel: RiskLevel, val reasonCodes: List<String>, val status: BillingExceptionStatus, val region: String, val createdAt: Instant, val reviewedBy: String?)
 data class BillingExceptionListResponse(val items: List<BillingExceptionDto>, val page: PageMetadata)
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "action")
+@JsonSubTypes(
+    JsonSubTypes.Type(VerifyReadingReviewRequest::class, name = "VERIFY_READING"),
+    JsonSubTypes.Type(RequestFieldVisitReviewRequest::class, name = "REQUEST_FIELD_VISIT"),
+    JsonSubTypes.Type(CorrectBillReviewRequest::class, name = "CORRECT_BILL"),
+    JsonSubTypes.Type(ApproveReviewRequest::class, name = "APPROVE"),
+)
 sealed interface BillingExceptionReviewRequest { val action: BillingReviewAction; val reviewedBy: String; val notes: String? }
 data class VerifyReadingReviewRequest(override val reviewedBy: String, override val notes: String? = null) : BillingExceptionReviewRequest { override val action = BillingReviewAction.VERIFY_READING }
-data class RequestFieldVisitReviewRequest(override val reviewedBy: String, override val notes: String? = null) : BillingExceptionReviewRequest { override val action = BillingReviewAction.REQUEST_FIELD_VISIT }
+data class RequestFieldVisitReviewRequest(override val reviewedBy: String, val fieldVisitRequest: FieldVisitRequest, override val notes: String? = null) : BillingExceptionReviewRequest { override val action = BillingReviewAction.REQUEST_FIELD_VISIT }
 data class CorrectBillReviewRequest(override val reviewedBy: String, val correction: BillCorrectionDraft, override val notes: String? = null) : BillingExceptionReviewRequest { override val action = BillingReviewAction.CORRECT_BILL }
 data class ApproveReviewRequest(override val reviewedBy: String, override val notes: String? = null) : BillingExceptionReviewRequest { override val action = BillingReviewAction.APPROVE }
 data class BillCorrectionDraft(val originalValue: BigDecimal, val correctedValue: BigDecimal, val reason: String, val region: String)

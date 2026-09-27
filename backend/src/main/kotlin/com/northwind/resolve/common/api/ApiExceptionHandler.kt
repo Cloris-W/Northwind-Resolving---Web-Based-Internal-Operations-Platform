@@ -5,6 +5,7 @@ import com.northwind.resolve.cases.application.CaseNotFoundException
 import com.northwind.resolve.cases.application.InvalidRequestException
 import com.northwind.resolve.cases.application.InvalidCaseTransferException
 import com.northwind.resolve.cases.application.MutationConflictException
+import com.northwind.resolve.billing.application.BillingExceptionNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
@@ -31,6 +32,9 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(MutationConflictException::class)
     fun mutationConflict(error: MutationConflictException, request: HttpServletRequest) = error(HttpStatus.CONFLICT, "STATE_CONFLICT", error.message ?: "Mutation conflict", request)
+
+    @ExceptionHandler(BillingExceptionNotFoundException::class)
+    fun billingExceptionNotFound(error: BillingExceptionNotFoundException, request: HttpServletRequest) = error(HttpStatus.NOT_FOUND, "BILLING_EXCEPTION_NOT_FOUND", error.message!!, request)
 
     private fun error(status: HttpStatus, code: String, message: String, request: HttpServletRequest): ResponseEntity<ApiErrorResponse> =
         ResponseEntity.status(status).body(ApiErrorResponse(Instant.now(), status.value(), code, message, request.getHeader("X-Trace-Id") ?: UUID.randomUUID().toString()))

@@ -711,8 +711,10 @@ components:
       allOf:
         - $ref: '#/components/schemas/ReviewRequestBase'
         - type: object
+          required: [fieldVisitRequest]
           properties:
             action: { type: string, enum: [REQUEST_FIELD_VISIT] }
+            fieldVisitRequest: { $ref: '#/components/schemas/FieldVisitRequest' }
     CorrectBillReviewRequest:
       allOf:
         - $ref: '#/components/schemas/ReviewRequestBase'

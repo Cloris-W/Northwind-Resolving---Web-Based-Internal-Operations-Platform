@@ -29,6 +29,7 @@ data class BillingCorrectionIndicator(
 )
 
 data class PersistedFieldVisitReference(val visitId: UUID, val caseId: String, val status: String, val scheduledAt: Instant, val completedAt: Instant?, val outcome: String?)
+data class ImportedBillingRiskFact(val caseId: String, val accountId: String, val region: String, val openedAt: Instant, val earlierCorrectionEvidence: Boolean, val earlierBillingComplaint: Boolean)
 
 interface LegacySourceQuery {
     fun findCase(caseId: String): ImportedCaseReference?
@@ -36,4 +37,5 @@ interface LegacySourceQuery {
     fun findMeterMetrics(region: String, month: LocalDate): List<MeterRegionMetric>
     fun findBillingIndicators(accountId: String): List<BillingCorrectionIndicator>
     fun findFieldVisits(caseId: String): List<PersistedFieldVisitReference>
+    fun findBillingRiskFacts(): List<ImportedBillingRiskFact>
 }

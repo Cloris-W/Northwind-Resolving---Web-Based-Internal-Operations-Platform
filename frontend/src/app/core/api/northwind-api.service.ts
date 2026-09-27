@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { BillingHistoryResponse, CaseContext, CaseListResponse, CaseEvent, FieldVisit, FieldVisitRequest, MeterReadingsResponse, TransferCaseRequest, TransferCaseResponse } from './northwind-api.models';
+import { BillingHistoryResponse, BillingException, BillingExceptionPage, BillingReviewRequest, CaseContext, CaseListResponse, CaseEvent, FieldVisit, FieldVisitRequest, MeterReadingsResponse, TransferCaseRequest, TransferCaseResponse } from './northwind-api.models';
 
 @Injectable({ providedIn: 'root' })
 export class NorthwindApiService {
@@ -13,4 +13,7 @@ export class NorthwindApiService {
   transferCase(caseId: string, request: TransferCaseRequest, idempotencyKey: string) { return this.http.post<TransferCaseResponse>(`/api/cases/${encodeURIComponent(caseId)}/transfer`, request, { headers: this.idempotencyHeader(idempotencyKey) }); }
   requestFieldVisit(caseId: string, request: FieldVisitRequest, idempotencyKey: string) { return this.http.post<FieldVisit>(`/api/cases/${encodeURIComponent(caseId)}/field-visit`, request, { headers: this.idempotencyHeader(idempotencyKey) }); }
   private idempotencyHeader(idempotencyKey: string) { return new HttpHeaders().set('Idempotency-Key', idempotencyKey); }
+  billingExceptions(params: Record<string,string>) { return this.http.get<BillingExceptionPage>('/api/billing/exceptions',{params:new HttpParams({fromObject:params})}); }
+  billingException(id:string) { return this.http.get<BillingException>(`/api/billing/exceptions/${encodeURIComponent(id)}`); }
+  reviewBillingException(id:string,request:BillingReviewRequest,key:string) { return this.http.post(`/api/billing/exceptions/${encodeURIComponent(id)}/review`,request,{headers:this.idempotencyHeader(key)}); }
 }
