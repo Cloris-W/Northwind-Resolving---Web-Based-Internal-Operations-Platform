@@ -55,3 +55,7 @@ Case transfer updates only `cases.assigned_team` and appends a `TRANSFERRED` eve
 `billing_exceptions.region` is a billing-owned, non-null snapshot column established in V1. Phase 5 exception generation copies the evaluated case region into it; queue filtering reads only this table. The MVP creates at most one generated exception per source case and never reopens or overwrites an existing reviewed exception on a later startup scan.
 
 The supplied source has no account-level estimated-read or meter-history facts. Those risk features remain unavailable rather than inferred from complaint categories or regional aggregates. Legacy correction evidence is boolean-only and must precede the evaluated complaint; canonical correction feedback is only earlier `bill_corrections.created_at` records.
+
+## Phase 7 audit anchoring
+
+V4 adds nullable `audit_events.source_event_reference`. New audit records bind `BILL_CORRECTED` to the canonical `bill_corrections.id` UUID. A partial unique index on `(event_type, source_event_reference)` prevents duplicate local audits for the same known source event while retaining migration compatibility for prior rows.

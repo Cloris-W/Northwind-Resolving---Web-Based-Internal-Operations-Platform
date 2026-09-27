@@ -10,6 +10,7 @@ import com.northwind.resolve.cases.application.MutationConflictException
 import com.northwind.resolve.cases.domain.CaseEventType
 import com.northwind.resolve.common.persistence.MutationIdempotencyRepository
 import com.northwind.resolve.fieldforce.application.FieldVisitService
+import com.northwind.resolve.audit.application.AuditApplicationService
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,7 +20,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Service @Profile("database")
-class BillingExceptionReviewService(private val exceptions: BillingExceptionRepository, private val corrections: BillCorrectionRepository, private val timeline: CaseTimelineEventService, private val fieldVisits: FieldVisitService, private val idempotency: MutationIdempotencyRepository, private val objectMapper: ObjectMapper) {
+class BillingExceptionReviewService(private val exceptions: BillingExceptionRepository, private val corrections: BillCorrectionRepository, private val timeline: CaseTimelineEventService, private val fieldVisits: FieldVisitService, private val idempotency: MutationIdempotencyRepository, private val objectMapper: ObjectMapper, private val audits: AuditApplicationService) {
     @Transactional fun review(id: UUID, request: BillingExceptionReviewRequest, key: String): BillingExceptionReviewResponse {
         validate(request,key); val fingerprint=digest("$id",objectMapper.writeValueAsString(request)); idempotency.lock(OP,key)
         idempotency.find(OP,key)?.let { if(it.fingerprint != fingerprint) throw MutationConflictException("Idempotency key was already used for a different billing review"); return objectMapper.readValue(it.responseJson,BillingExceptionReviewResponse::class.java) }
@@ -29,7 +30,7 @@ class BillingExceptionReviewService(private val exceptions: BillingExceptionRepo
         when(request) {
             is VerifyReadingReviewRequest -> { exceptions.updateStatus(id,BillingExceptionStatus.RESOLVED,request.reviewedBy); timeline.appendIfCaseExists(exception.caseId,CaseEventType.BILL_CHECKED,request.reviewedBy,"Billing reading verified") }
             is ApproveReviewRequest -> { exceptions.updateStatus(id,BillingExceptionStatus.DISMISSED,request.reviewedBy); timeline.appendIfCaseExists(exception.caseId,CaseEventType.BILL_CHECKED,request.reviewedBy,"Original bill approved as valid") }
-            is CorrectBillReviewRequest -> { val d=request.correction; val c=BillCorrectionEntity(UUID.randomUUID(),exception.accountId,d.originalValue,d.correctedValue,d.reason,d.region,Instant.now()); corrections.create(c); correctionDto=BillCorrectionDto(c.id,c.accountId,c.originalValue,c.correctedValue,c.reason,c.region,c.createdAt); exceptions.updateStatus(id,BillingExceptionStatus.RESOLVED,request.reviewedBy); timeline.appendIfCaseExists(exception.caseId,CaseEventType.BILL_CORRECTED,request.reviewedBy,"Bill correction recorded") }
+            is CorrectBillReviewRequest -> { val d=request.correction; val c=BillCorrectionEntity(UUID.randomUUID(),exception.accountId,d.originalValue,d.correctedValue,d.reason,d.region,Instant.now()); corrections.create(c); correctionDto=BillCorrectionDto(c.id,c.accountId,c.originalValue,c.correctedValue,c.reason,c.region,c.createdAt); exceptions.updateStatus(id,BillingExceptionStatus.RESOLVED,request.reviewedBy); timeline.appendIfCaseExists(exception.caseId,CaseEventType.BILL_CORRECTED,request.reviewedBy,"Bill correction recorded"); if(exception.caseId!=null) audits.createPendingForBillCorrection(exception.caseId!!,c) }
             is RequestFieldVisitReviewRequest -> { if(!timeline.exists(exception.caseId)) throw MutationConflictException("A valid related case is required for a field visit"); exceptions.updateStatus(id,BillingExceptionStatus.IN_REVIEW,request.reviewedBy); visitDto=fieldVisits.request(exception.caseId!!,request.fieldVisitRequest,key) }
         }
         val updated=exceptions.find(id)!!; val response=BillingExceptionReviewResponse(updated.toDto(),request.action,correctionDto,visitDto,Instant.now()); idempotency.store(OP,key,fingerprint,objectMapper.writeValueAsString(response)); return response

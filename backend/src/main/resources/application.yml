@@ -27,3 +27,11 @@ northwind:
     model: ${GEMINI_MODEL:gemini-3.8-flash}
     timeout: ${GEMINI_TIMEOUT:PT10S}
     max-output-tokens: ${GEMINI_MAX_OUTPUT_TOKENS:1024}
+  solana:
+    enabled: ${SOLANA_ENABLED:false}
+    cluster: ${SOLANA_CLUSTER:devnet}
+    rpc-url: ${SOLANA_RPC_URL:https://api.devnet.solana.com}
+    keypair-path: ${SOLANA_KEYPAIR_PATH:}
+    commitment: ${SOLANA_COMMITMENT:confirmed}
+    timeout: ${SOLANA_TIMEOUT:PT10S}
+    retry-delay: ${SOLANA_RETRY_DELAY:PT5M}

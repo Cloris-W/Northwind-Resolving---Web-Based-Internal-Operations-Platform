@@ -21,6 +21,7 @@ class AuditEventEntity(
     @Enumerated(EnumType.STRING) @Column(name = "event_type", nullable = false, length = 64) var eventType: AuditEventType = AuditEventType.BILL_CORRECTED,
     @Column(name = "payload_hash", nullable = false, length = 64) var payloadHash: String = "",
     @Column(name = "solana_signature", length = 128) var solanaSignature: String? = null,
+    @Column(name = "source_event_reference", length = 128) var sourceEventReference: String? = null,
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 32) var status: AuditStatus = AuditStatus.PENDING,
     @Column(name = "created_at", nullable = false) var createdAt: Instant = Instant.EPOCH
 )

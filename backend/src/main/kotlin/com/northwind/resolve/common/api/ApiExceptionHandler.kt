@@ -7,6 +7,7 @@ import com.northwind.resolve.cases.application.InvalidCaseTransferException
 import com.northwind.resolve.cases.application.MutationConflictException
 import com.northwind.resolve.billing.application.BillingExceptionNotFoundException
 import com.northwind.resolve.ai.application.AiUnavailableException
+import com.northwind.resolve.audit.application.AuditEventNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
@@ -39,6 +40,9 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(AiUnavailableException::class)
     fun aiUnavailable(error: AiUnavailableException, request: HttpServletRequest) = error(HttpStatus.SERVICE_UNAVAILABLE, "AI_UNAVAILABLE", error.message ?: "AI assistance is temporarily unavailable", request)
+
+    @ExceptionHandler(AuditEventNotFoundException::class)
+    fun auditNotFound(error: AuditEventNotFoundException, request: HttpServletRequest) = error(HttpStatus.NOT_FOUND, "AUDIT_EVENT_NOT_FOUND", error.message!!, request)
 
     private fun error(status: HttpStatus, code: String, message: String, request: HttpServletRequest): ResponseEntity<ApiErrorResponse> =
         ResponseEntity.status(status).body(ApiErrorResponse(Instant.now(), status.value(), code, message, request.getHeader("X-Trace-Id") ?: UUID.randomUUID().toString()))

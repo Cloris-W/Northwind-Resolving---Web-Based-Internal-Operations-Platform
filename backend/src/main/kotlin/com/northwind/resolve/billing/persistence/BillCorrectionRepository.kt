@@ -9,6 +9,7 @@ import java.time.ZoneOffset
 
 @Repository @Profile("database")
 class BillCorrectionRepository(private val jdbc: NamedParameterJdbcTemplate) {
+    fun find(id: java.util.UUID): BillCorrectionEntity? = jdbc.query("SELECT * FROM bill_corrections WHERE id=:id",mapOf("id" to id)){rs,_-> BillCorrectionEntity(rs.getObject("id",java.util.UUID::class.java),rs.getString("account_id"),rs.getBigDecimal("original_value"),rs.getBigDecimal("corrected_value"),rs.getString("reason"),rs.getString("region"),rs.getObject("created_at",java.time.OffsetDateTime::class.java).toInstant()) }.firstOrNull()
     fun existsEarlier(accountId: String, evaluatedAt: Instant): Boolean = (jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM bill_corrections WHERE account_id=:accountId AND created_at < :evaluatedAt)",mapOf("accountId" to accountId,"evaluatedAt" to evaluatedAt.atOffset(ZoneOffset.UTC)),Boolean::class.java) ?: false)
     fun create(correction: BillCorrectionEntity) { jdbc.update("INSERT INTO bill_corrections (id,account_id,original_value,corrected_value,reason,region,created_at) VALUES (:id,:accountId,:originalValue,:correctedValue,:reason,:region,:createdAt)",mapOf("id" to correction.id,"accountId" to correction.accountId,"originalValue" to correction.originalValue,"correctedValue" to correction.correctedValue,"reason" to correction.reason,"region" to correction.region,"createdAt" to correction.createdAt.atOffset(ZoneOffset.UTC))) }
 }

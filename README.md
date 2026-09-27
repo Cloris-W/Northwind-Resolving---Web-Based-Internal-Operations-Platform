@@ -77,3 +77,7 @@ The Case Workspace does not fabricate missing source facts. The supplied meter d
 ## Gemini assistance
 
 Gemini summary and recommendation requests are advisory-only and run through the backend. Configure an optional `GEMINI_API_KEY` in a local ignored `.env.local`; without it, the application starts normally and AI requests return a temporary-unavailable response. AI output is structured and validated before it is displayed or persisted. It cannot perform transfers, request field visits, alter billing, or send customer communication.
+
+## Solana audit
+
+Solana is disabled by default and targets Devnet only. Audit anchors contain only a SHA-256 hash in a Memo Program instruction; no PII, correction values, case/account identifiers, or secrets are written on-chain. A local signer path may be configured in ignored `.env.local`; pending audits are retried in the background. The live Devnet demonstration is a separate manual step.

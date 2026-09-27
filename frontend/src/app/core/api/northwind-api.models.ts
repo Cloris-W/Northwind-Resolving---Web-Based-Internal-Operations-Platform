@@ -13,3 +13,4 @@ export interface BillingExceptionPage { items: BillingException[]; page:{page:nu
 export type BillingReviewRequest = { action:'VERIFY_READING'|'APPROVE'; reviewedBy:string; notes?:string } | { action:'REQUEST_FIELD_VISIT'; reviewedBy:string; fieldVisitRequest:FieldVisitRequest; notes?:string } | { action:'CORRECT_BILL'; reviewedBy:string; correction:{originalValue:number;correctedValue:number;reason:string;region:string}; notes?:string };
 export interface AiCaseSummary { caseId:string; summary:string; classification:string; customerResponseDraft:string; generatedAt:string; model?:string; }
 export interface AiCaseRecommendation { caseId:string; recommendation:string; rationale:string; generatedAt:string; advisory:true; model?:string; }
+export interface AuditEvent { id:string; caseId:string; eventType:string; payloadHash:string; solanaSignature:string|null; status:'PENDING'|'SUBMITTED'|'VERIFIED'|'FAILED'; createdAt:string; }

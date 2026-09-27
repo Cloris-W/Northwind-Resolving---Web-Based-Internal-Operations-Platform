@@ -265,6 +265,25 @@ paths:
         '503':
           $ref: '#/components/responses/AiUnavailable'
   /api/audit/events:
+    get:
+      tags: [Audit]
+      operationId: listAuditEventsByCase
+      summary: List audit events for a canonical case
+      parameters:
+        - name: caseId
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 64 }
+      responses:
+        '200':
+          description: Audit events newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AuditEvent' }
+        '404':
+          $ref: '#/components/responses/CaseNotFound'
     post:
       tags: [Audit]
       operationId: createAuditEvent
