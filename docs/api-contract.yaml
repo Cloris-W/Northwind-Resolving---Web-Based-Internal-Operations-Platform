@@ -347,6 +347,11 @@ paths:
       tags: [Analytics]
       operationId: getValueCase
       summary: Get value-case assumptions and calculated benefit metrics
+      parameters:
+        - $ref: '#/components/parameters/ComplaintReductionPercent'
+        - $ref: '#/components/parameters/TransferReductionPercent'
+        - $ref: '#/components/parameters/AnnualOperatingCost'
+        - $ref: '#/components/parameters/ImplementationCost'
       responses:
         '200':
           description: Value-case calculation inputs and outputs
@@ -425,6 +430,22 @@ components:
       name: to
       in: query
       schema: { type: string, format: date-time }
+    ComplaintReductionPercent:
+      name: complaintReductionPercent
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    TransferReductionPercent:
+      name: transferReductionPercent
+      in: query
+      schema: { type: number, minimum: 0, maximum: 100 }
+    AnnualOperatingCost:
+      name: annualOperatingCost
+      in: query
+      schema: { type: number, minimum: 0 }
+    ImplementationCost:
+      name: implementationCost
+      in: query
+      schema: { type: number, minimum: 0 }
   responses:
     InvalidRequest:
       description: Request validation failed
@@ -814,40 +835,84 @@ components:
         actualHash: { type: string, pattern: '^[A-Fa-f0-9]{64}$', nullable: true }
     DashboardKpisResponse:
       type: object
-      required: [generatedAt, metrics]
+      required: [generatedAt, period, metrics, trends, estimatedReadTrend, traces]
       properties:
         generatedAt: { type: string, format: date-time }
-        metrics:
-          type: object
-          required: [backlog, slaCompliancePercent, firstContactResolutionPercent, transferRatePercent, reopenRatePercent, billingExceptionCount, estimatedReadRatePercent]
-          properties:
-            backlog: { type: integer, minimum: 0 }
-            slaCompliancePercent: { type: number, minimum: 0, maximum: 100 }
-            firstContactResolutionPercent: { type: number, minimum: 0, maximum: 100 }
-            transferRatePercent: { type: number, minimum: 0, maximum: 100 }
-            reopenRatePercent: { type: number, minimum: 0, maximum: 100 }
-            billingExceptionCount: { type: integer, minimum: 0 }
-            estimatedReadRatePercent: { type: number, minimum: 0, maximum: 100 }
+        period: { $ref: '#/components/schemas/AnalyticsPeriod' }
+        metrics: { $ref: '#/components/schemas/DashboardMetrics' }
+        trends: { type: array, items: { $ref: '#/components/schemas/DashboardTrendPoint' } }
+        estimatedReadTrend: { type: array, items: { $ref: '#/components/schemas/EstimatedReadTrendPoint' } }
+        traces: { type: object, additionalProperties: { $ref: '#/components/schemas/MetricTrace' } }
+    AnalyticsPeriod:
+      type: object
+      required: [from, to]
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+    DashboardMetrics:
+      type: object
+      required: [backlog, slaCompliancePercent, firstContactResolutionPercent, transferRatePercent, reopenRatePercent, billingExceptionCount, estimatedReadRatePercent]
+      properties:
+        backlog: { type: integer, minimum: 0 }
+        slaCompliancePercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+        firstContactResolutionPercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+        transferRatePercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+        reopenRatePercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+        billingExceptionCount: { type: integer, minimum: 0 }
+        estimatedReadRatePercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+    DashboardTrendPoint:
+      type: object
+      required: [month, complaintsOpened, complaintsClosed, firstContactResolutionPercent, scope]
+      properties:
+        month: { type: string, format: date }
+        complaintsOpened: { type: integer, minimum: 0 }
+        complaintsClosed: { type: integer, minimum: 0 }
+        firstContactResolutionPercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+        scope: { type: string, enum: [GLOBAL] }
+    EstimatedReadTrendPoint:
+      type: object
+      required: [month, estimatedReadRatePercent, scope]
+      properties:
+        month: { type: string, format: date }
+        estimatedReadRatePercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+        scope: { type: string, enum: [GLOBAL, REGION] }
+    MetricTrace:
+      type: object
+      required: [source, period, classification, scope]
+      properties:
+        source: { type: string, minLength: 1 }
+        period: { $ref: '#/components/schemas/AnalyticsPeriod' }
+        classification: { type: string, enum: [OBSERVED, ASSUMPTION, CALCULATED] }
+        scope: { type: string, enum: [GLOBAL, REGION] }
+        formula: { type: string, nullable: true }
     ValueCaseResponse:
       type: object
-      required: [assumptions, observedMetrics, grossBenefit, annualOperatingCost, annualNetBenefit, paybackMonths]
+      required: [period, assumptions, observedBaseline, projectedComplaintBenefit, projectedTransferBenefit, grossBenefit, annualOperatingCost, annualNetBenefit, paybackMonths, traces]
       properties:
-        assumptions:
-          type: object
-          required: [inboundCallCost, standardComplaintCost, transferredComplaintCost, manualCorrectionCost, fieldVisitCost, contactCentreFteAnnualCost, buildCost]
-          properties:
-            inboundCallCost: { type: number, format: double, example: 7.4 }
-            standardComplaintCost: { type: number, format: double, example: 68 }
-            transferredComplaintCost: { type: number, format: double, example: 121 }
-            manualCorrectionCost: { type: number, format: double, example: 34 }
-            fieldVisitCost: { type: number, format: double, example: 92 }
-            contactCentreFteAnnualCost: { type: number, format: double, example: 46000 }
-            buildCost: { type: number, format: double, description: Explicit assumption until supplied by source data }
-        observedMetrics:
-          type: object
-          additionalProperties: { type: number, format: double }
-          description: Observed source metrics; distinct from assumptions.
-        grossBenefit: { type: number, format: double }
-        annualOperatingCost: { type: number, format: double }
-        annualNetBenefit: { type: number, format: double, description: Gross benefit minus annual operating cost }
-        paybackMonths: { type: number, format: double, minimum: 0 }
+        period: { $ref: '#/components/schemas/AnalyticsPeriod' }
+        assumptions: { $ref: '#/components/schemas/ValueCaseAssumptions' }
+        observedBaseline: { $ref: '#/components/schemas/ValueCaseObservedBaseline' }
+        projectedComplaintBenefit: { type: number, format: double, nullable: true }
+        projectedTransferBenefit: { type: number, format: double, nullable: true }
+        grossBenefit: { type: number, format: double, nullable: true }
+        annualOperatingCost: { type: number, format: double, nullable: true }
+        annualNetBenefit: { type: number, format: double, nullable: true }
+        paybackMonths: { type: number, format: double, minimum: 0, nullable: true }
+        traces: { type: object, additionalProperties: { $ref: '#/components/schemas/MetricTrace' } }
+    ValueCaseAssumptions:
+      type: object
+      required: [complaintReductionPercent, transferReductionPercent, annualOperatingCost, implementationCost]
+      properties:
+        complaintReductionPercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+        transferReductionPercent: { type: number, minimum: 0, maximum: 100, nullable: true }
+        annualOperatingCost: { type: number, minimum: 0, nullable: true }
+        implementationCost: { type: number, minimum: 0, nullable: true }
+    ValueCaseObservedBaseline:
+      type: object
+      required: [annualComplaints, annualTransferredComplaints, averageComplaintCost, transferredComplaintCost, manualCorrectionCount]
+      properties:
+        annualComplaints: { type: integer, minimum: 0 }
+        annualTransferredComplaints: { type: integer, minimum: 0 }
+        averageComplaintCost: { type: number, format: double, nullable: true }
+        transferredComplaintCost: { type: number, format: double, nullable: true }
+        manualCorrectionCount: { type: integer, minimum: 0 }

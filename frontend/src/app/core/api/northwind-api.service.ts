@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { AiCaseRecommendation, AiCaseSummary, BillingHistoryResponse, BillingException, BillingExceptionPage, BillingReviewRequest, CaseContext, CaseListResponse, CaseEvent, FieldVisit, FieldVisitRequest, MeterReadingsResponse, TransferCaseRequest, TransferCaseResponse, AuditEvent } from './northwind-api.models';
+import { AiCaseRecommendation, AiCaseSummary, BillingHistoryResponse, BillingException, BillingExceptionPage, BillingReviewRequest, CaseContext, CaseListResponse, CaseEvent, FieldVisit, FieldVisitRequest, MeterReadingsResponse, TransferCaseRequest, TransferCaseResponse, AuditEvent, DashboardKpisResponse, ValueCaseResponse } from './northwind-api.models';
 
 @Injectable({ providedIn: 'root' })
 export class NorthwindApiService {
@@ -20,4 +20,6 @@ export class NorthwindApiService {
   aiRecommendation(caseId: string) { return this.http.post<AiCaseRecommendation>(`/api/ai/cases/${encodeURIComponent(caseId)}/recommendation`, null); }
   auditEvents(caseId:string) { return this.http.get<AuditEvent[]>('/api/audit/events',{params:new HttpParams().set('caseId',caseId)}); }
   verifyAudit(id:string) { return this.http.get<{auditEventId:string;verificationStatus:'VERIFIED'|'MISMATCH'|'PENDING';checkedAt:string;expectedHash?:string;actualHash?:string}>(`/api/audit/events/${encodeURIComponent(id)}/verify`); }
+  dashboard(params: Record<string,string>) { return this.http.get<DashboardKpisResponse>('/api/dashboard/kpis',{params:new HttpParams({fromObject:params})}); }
+  valueCase(params: Record<string,string>) { return this.http.get<ValueCaseResponse>('/api/value-case',{params:new HttpParams({fromObject:params})}); }
 }

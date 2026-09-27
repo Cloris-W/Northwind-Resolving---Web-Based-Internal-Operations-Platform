@@ -4,6 +4,8 @@ import { CaseWorkspaceComponent } from './pages/case-workspace/case-workspace.co
 import { BillingQualityComponent } from './pages/billing-quality/billing-quality.component';
 import { BillingExceptionDetailComponent } from './pages/billing-exception-detail/billing-exception-detail.component';
 import { AuditComponent } from './pages/audit/audit.component';
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { ValueCaseComponent } from './pages/value-case/value-case.component';
 
 export const routes: Routes = [
   { path: '', component: CaseSearchComponent },
@@ -11,5 +13,7 @@ export const routes: Routes = [
   { path: 'billing/exceptions', component: BillingQualityComponent },
   { path: 'billing/exceptions/:id', component: BillingExceptionDetailComponent },
   { path: 'audit', component: AuditComponent },
+  { path: 'dashboard', component: DashboardComponent },
+  { path: 'value-case', component: ValueCaseComponent },
   { path: '**', redirectTo: '' }
 ];

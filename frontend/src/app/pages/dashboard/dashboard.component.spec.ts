@@ -1,0 +1,7 @@
+import { provideZonelessChangeDetection } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
+import { DashboardComponent } from './dashboard.component';
+import { NorthwindApiService } from '../../core/api/northwind-api.service';
+
+describe('DashboardComponent',()=>{let fixture:ComponentFixture<DashboardComponent>;let fail=false;const api={dashboard:()=>fail?throwError(()=>new Error('x')):of({generatedAt:'2026-01-01T00:00:00Z',period:{from:'2024-01-01',to:'2024-12-01'},metrics:{backlog:1,slaCompliancePercent:90,firstContactResolutionPercent:80,transferRatePercent:5,reopenRatePercent:1,billingExceptionCount:0,estimatedReadRatePercent:10},trends:[],estimatedReadTrend:[],traces:{}})};beforeEach(async()=>{fail=false;await TestBed.configureTestingModule({imports:[DashboardComponent],providers:[provideZonelessChangeDetection(),{provide:NorthwindApiService,useValue:api}]}).compileComponents();fixture=TestBed.createComponent(DashboardComponent)});it('renders global dashboard labels',()=>{fixture.detectChanges();expect(fixture.nativeElement.textContent).toContain('Executive Dashboard');expect(fixture.nativeElement.textContent).toContain('GLOBAL')});it('shows API error',async()=>{fixture.detectChanges();fail=true;fixture.componentInstance.load();await fixture.whenStable();fixture.detectChanges();expect(fixture.nativeElement.textContent).toContain('Unable to load dashboard.')})})

@@ -51,7 +51,7 @@ class ApiContractValidationTests {
         )
 
         val operationIds = openApi.paths.values.flatMap { it.readOperations() }.map { it.operationId }
-        assertEquals(16, operationIds.size)
+        assertEquals(17, operationIds.size)
         assertEquals(operationIds.size, operationIds.toSet().size)
         assertTrue(operationIds.all { it.matches(Regex("[a-z][A-Za-z0-9]*")) })
     }
